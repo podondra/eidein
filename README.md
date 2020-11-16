@@ -1,6 +1,6 @@
-# spectraviz
+# eidein
 
-interactive tool for dimensionality reduction of spectra and their visualisation
+interactive tool for dimensionality reduction of data and their visualisation
 
 ## installation
 
