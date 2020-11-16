@@ -27,4 +27,4 @@ setuptools.setup(
         "ipywidgets>=7.5",
         "matplotlib>=3.3",
         "scikit-learn>=0.23",
-        "umap>=0.4"])
+        "umap-learn>=0.4"])
