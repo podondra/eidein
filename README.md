@@ -21,3 +21,9 @@ Need to install Parallel HDF5:
 1. Run `preparation.ipynb` notebook to create `dataset.hdf5` with identifiers and redshift.
 2. Run `data_extr.py`.
 3. Run `data_prep.py`.
+
+## upload to PyPI
+
+    $ rm dist/*
+    $ python setup.py sdist bdist_wheel
+    $ twine upload dist/*
