@@ -68,10 +68,9 @@ class Eidein(ipywidgets.HBox):
     def onpick(self, event):
         flux = self.X[event.ind[0]]
         # TODO provide custom plot function
-        LOGLAMMIN, LOGLAMMAX = 3.5836, 3.9559
-        EPS = 0.0005
-        N_FEATURES = 512
-        wave = numpy.power(10, numpy.linspace(LOGLAMMIN + EPS, LOGLAMMAX - EPS, N_FEATURES))
+        LOGLAMMIN, LOGLAMMAX = 3.5832, 3.9583
+        N_FEATURES = 3752
+        wave = numpy.power(10, numpy.linspace(LOGLAMMIN, LOGLAMMAX, N_FEATURES))
         self.spec_ax.clear()
         self.spec_ax.plot(wave, flux)
         self.spec_ax.grid(True)
