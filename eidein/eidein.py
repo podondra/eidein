@@ -7,12 +7,14 @@ import umap
 
 
 class Eidein(ipywidgets.HBox):
-    def __init__(self, ids, X, y, plot_fn, widget_label):
+    def __init__(self, ids, X, y, plot_fn, labels):
         super().__init__()
 
         self.ids, self.X, self.y = ids, X, y
         self.plot_fn = plot_fn
-        self.widget_label = widget_label
+        self.labels = labels
+        self.picked_idx = None
+        self.labelled = dict()
 
         pca_widget = ipywidgets.interactive(
             self.pca, {"manual": True},
@@ -55,12 +57,18 @@ class Eidein(ipywidgets.HBox):
             tabs.set_title(i, title)
 
         self.proj_fig.canvas.mpl_connect("pick_event", self.onpick)
+        self.labels.observe(self.plot_data, 'value')
 
-        self.idx_picked = None
-        self.widget_label.observe(self.plot_data, 'value')
+        self.label_widget = ipywidgets.interactive(
+                self.add2labelled, {"manual": True}, label=self.labels)
 
         self.layout = ipywidgets.Layout(align_items="stretch", flex_flow="row wrap")
-        self.children = [tabs, self.reducer_out, proj_out, spec_out, self.widget_label]
+        self.children = [
+                tabs,
+                self.reducer_out,
+                proj_out,
+                spec_out,
+                self.label_widget]
 
     def reduce_dim(self, reducer):
         with self.reducer_out:
@@ -74,17 +82,17 @@ class Eidein(ipywidgets.HBox):
 
     def plot_data(self, change=None):
         self.data_ax.clear()
-        identifier = self.ids[self.idx_picked]
-        x = self.X[self.idx_picked]
-        y = self.y[self.idx_picked]
-        label = self.widget_label.value
+        identifier = self.ids[self.picked_idx]
+        x = self.X[self.picked_idx]
+        y = self.y[self.picked_idx]
+        label = self.labels.value
         self.plot_fn(self.data_ax, identifier, x, y, label)
 
     def onpick(self, event):
         # on pick update the picked index and plot the data with the index
-        self.idx_picked = event.ind[0]
+        self.picked_idx = event.ind[0]
         # set the label to be the predicted label (i.e. y)
-        self.widget_label.value = self.y[self.idx_picked]
+        self.labels.value = self.y[self.picked_idx]
         self.plot_data()
 
     def pca(self, whiten=False, svd_solver="auto"):
@@ -109,3 +117,6 @@ class Eidein(ipywidgets.HBox):
             learning_rate=learning_rate, init=init, min_dist=min_dist,
             low_memory=low_memory, verbose=True)
         self.plot_projection(self.reduce_dim(reducer))
+
+    def add2labelled(self, label):
+        self.labelled[self.ids[self.picked_idx]] = label
