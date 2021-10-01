@@ -83,6 +83,8 @@ class Eidein(ipywidgets.HBox):
     def onpick(self, event):
         # on pick update the picked index and plot the data with the index
         self.idx_picked = event.ind[0]
+        # set the label to be the predicted label (i.e. y)
+        self.widget_label.value = self.y[self.idx_picked]
         self.plot_data()
 
     def pca(self, whiten=False, svd_solver="auto"):
