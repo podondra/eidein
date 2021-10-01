@@ -7,10 +7,12 @@ import umap
 
 
 class Eidein(ipywidgets.HBox):
-    def __init__(self, ids, X, y):
+    def __init__(self, ids, X, y, plot_fn, widget_label):
         super().__init__()
 
         self.ids, self.X, self.y = ids, X, y
+        self.plot_fn = plot_fn
+        self.widget_label = widget_label
 
         pca_widget = ipywidgets.interactive(
             self.pca, {"manual": True},
@@ -30,11 +32,13 @@ class Eidein(ipywidgets.HBox):
             self.umap, {"manual": True},
             n_neighbors=(2, 100, 1),
             metric=["euclidean", "manhattan", "chebyshev", "minkowski"],
+            # TODO why I have here ipywidgets.fixed(None)?
             n_epochs=ipywidgets.fixed(None),
             learning_rate=ipywidgets.FloatText(value=1.0, min=0, step=0.1),
             init=["spectral", "random"],
             min_dist=ipywidgets.FloatText(value=0.1, min=0, step=0.1))
 
+        # output of reducers (PCA, t-SNE, UMAP)
         self.reducer_out = ipywidgets.Output(layout={'border': '1px solid black'})
 
         proj_out = ipywidgets.Output()
@@ -43,7 +47,7 @@ class Eidein(ipywidgets.HBox):
 
         spec_out = ipywidgets.Output()
         with spec_out:
-            self.spec_fig, self.spec_ax = pyplot.subplots(constrained_layout=True)
+            self.data_fig, self.data_ax = pyplot.subplots(constrained_layout=True)
 
         tabs = ipywidgets.Tab()
         tabs.children = [pca_widget, tsne_widget, umap_widget]
@@ -52,8 +56,11 @@ class Eidein(ipywidgets.HBox):
 
         self.proj_fig.canvas.mpl_connect("pick_event", self.onpick)
 
+        self.idx_picked = None
+        self.widget_label.observe(self.plot_data, 'value')
+
         self.layout = ipywidgets.Layout(align_items="stretch", flex_flow="row wrap")
-        self.children = [tabs, self.reducer_out, proj_out, spec_out]
+        self.children = [tabs, self.reducer_out, proj_out, spec_out, self.widget_label]
 
     def reduce_dim(self, reducer):
         with self.reducer_out:
@@ -65,16 +72,18 @@ class Eidein(ipywidgets.HBox):
         collection = self.proj_ax.scatter(embedding[:, 0], embedding[:, 1], c=self.y, picker=True)
         self.proj_fig.colorbar(collection, ax=self.proj_ax)
 
+    def plot_data(self, change=None):
+        self.data_ax.clear()
+        identifier = self.ids[self.idx_picked]
+        x = self.X[self.idx_picked]
+        y = self.y[self.idx_picked]
+        label = self.widget_label.value
+        self.plot_fn(self.data_ax, identifier, x, y, label)
+
     def onpick(self, event):
-        flux = self.X[event.ind[0]]
-        # TODO provide custom plot function
-        LOGLAMMIN, LOGLAMMAX = 3.5832, 3.9583
-        N_FEATURES = 3752
-        wave = numpy.power(10, numpy.linspace(LOGLAMMIN, LOGLAMMAX, N_FEATURES))
-        self.spec_ax.clear()
-        self.spec_ax.plot(wave, flux)
-        self.spec_ax.grid(True)
-        print(flux, wave)
+        # on pick update the picked index and plot the data with the index
+        self.idx_picked = event.ind[0]
+        self.plot_data()
 
     def pca(self, whiten=False, svd_solver="auto"):
         reducer = decomposition.PCA(n_components=2, whiten=whiten, svd_solver=svd_solver)
