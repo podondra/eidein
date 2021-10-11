@@ -7,21 +7,22 @@ import umap
 
 
 class Eidein(ipywidgets.HBox):
-    def __init__(self, ids, X, y, plot_fn, labels):
+    def __init__(self, ids, X, y, uncertainty, plot_fn, label_widget):
         super().__init__()
 
         self.ids, self.X, self.y = ids, X, y
+        self.uncertainty = uncertainty
         self.plot_fn = plot_fn
-        self.labels = labels
+        self.label_widget = label_widget
         self.picked_idx = None
         self.labelled = dict()
 
         pca_widget = ipywidgets.interactive(
-            self.pca, {"manual": True},
+            self.pca, {"manual": True, "manual_name": "Run PCA"},
             svd_solver=["auto", "full", "arpack", "randomized"])
 
         tsne_widget = ipywidgets.interactive(
-            self.tsne, {"manual": True},
+            self.tsne, {"manual": True, "manual_name": "Run t-SNE"},
             perplexity=(5, 50, 1),
             early_exaggeration=ipywidgets.FloatText(value=12.0, step=0.1),
             learning_rate=ipywidgets.FloatText(value=200.0, step=0.1),
@@ -31,7 +32,7 @@ class Eidein(ipywidgets.HBox):
             n_jobs=ipywidgets.IntText(value=-1))
 
         umap_widget = ipywidgets.interactive(
-            self.umap, {"manual": True},
+            self.umap, {"manual": True, "manual_name": "Run UMAP"},
             n_neighbors=(2, 100, 1),
             metric=["euclidean", "manhattan", "chebyshev", "minkowski"],
             # TODO why I have here ipywidgets.fixed(None)?
@@ -57,10 +58,11 @@ class Eidein(ipywidgets.HBox):
             tabs.set_title(i, title)
 
         self.proj_fig.canvas.mpl_connect("pick_event", self.onpick)
-        self.labels.observe(self.plot_data, 'value')
+        self.label_widget.observe(self.plot_data, 'value')
 
-        self.label_widget = ipywidgets.interactive(
-                self.add2labelled, {"manual": True}, label=self.labels)
+        self.label_interactive = ipywidgets.interactive(
+                self.add2labelled, {"manual": True, "manual_name": "Label"},
+                label=self.label_widget)
 
         self.layout = ipywidgets.Layout(align_items="stretch", flex_flow="row wrap")
         self.children = [
@@ -68,7 +70,7 @@ class Eidein(ipywidgets.HBox):
                 self.reducer_out,
                 proj_out,
                 spec_out,
-                self.label_widget]
+                self.label_interactive]
 
     def reduce_dim(self, reducer):
         with self.reducer_out:
@@ -77,22 +79,23 @@ class Eidein(ipywidgets.HBox):
 
     def plot_projection(self, embedding):
         self.proj_ax.clear()
-        collection = self.proj_ax.scatter(embedding[:, 0], embedding[:, 1], c=self.y, picker=True)
-        self.proj_fig.colorbar(collection, ax=self.proj_ax)
+        collection = self.proj_ax.scatter(embedding[:, 0], embedding[:, 1], c=self.uncertainty, picker=True)
+        cbar = self.proj_fig.colorbar(collection, ax=self.proj_ax)
+        cbar.set_label("Uncertainty")
 
     def plot_data(self, change=None):
         self.data_ax.clear()
         identifier = self.ids[self.picked_idx]
         x = self.X[self.picked_idx]
         y = self.y[self.picked_idx]
-        label = self.labels.value
+        label = self.label_widget.value
         self.plot_fn(self.data_ax, identifier, x, y, label)
 
     def onpick(self, event):
         # on pick update the picked index and plot the data with the index
         self.picked_idx = event.ind[0]
         # set the label to be the predicted label (i.e. y)
-        self.labels.value = self.y[self.picked_idx]
+        self.label_widget.value = self.y[self.picked_idx]
         self.plot_data()
 
     def pca(self, whiten=False, svd_solver="auto"):
