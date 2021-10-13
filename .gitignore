@@ -1,6 +1,5 @@
 misc/
-/examples/data/*
-!README.md
+/examples/dataset.hdf5
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
