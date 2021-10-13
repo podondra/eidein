@@ -12,7 +12,6 @@ cycler==0.10.0
 debugpy==1.4.1
 decorator==5.0.9
 defusedxml==0.7.1
--e git+ssh://git@github.com/podondra/eidein.git@95fec9e701d45084a04660fdc578896bfbfdf212#egg=eidein
 entrypoints==0.3
 h5py==3.4.0
 idna==3.2
