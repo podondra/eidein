@@ -1,2 +1,2 @@
 #!/bin/bash
-wget -q -O examples/dataset.hdf5 "https://sandbox.zenodo.org/record/936999/files/dataset.hdf5?download=1"
+wget -q -O examples/dataset.hdf5 "https://zenodo.org/record/5571596/files/dataset.hdf5?download=1"
