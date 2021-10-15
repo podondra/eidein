@@ -1,5 +1,7 @@
 # eidein
 
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/podondra/eidein/master?labpath=examples%2Fexample.ipynb)
+
 interactive tool for dimensionality reduction of data and their visualisation
 
 ## installation
