@@ -1,4 +1,5 @@
 import ipywidgets
+from matplotlib import cm
 from matplotlib import pyplot
 import numpy
 from sklearn import decomposition
@@ -47,6 +48,8 @@ class Eidein(ipywidgets.HBox):
         proj_out = ipywidgets.Output()
         with proj_out:
             self.proj_fig, self.proj_ax = pyplot.subplots(constrained_layout=True)
+            self.proj_cbar = self.proj_fig.colorbar(cm.ScalarMappable(), ax=self.proj_ax)
+            self.proj_cbar.set_label("Uncertainty")
 
         spec_out = ipywidgets.Output()
         with spec_out:
@@ -79,9 +82,9 @@ class Eidein(ipywidgets.HBox):
 
     def plot_projection(self, embedding):
         self.proj_ax.clear()
-        collection = self.proj_ax.scatter(embedding[:, 0], embedding[:, 1], c=self.uncertainty, picker=True)
-        cbar = self.proj_fig.colorbar(collection, ax=self.proj_ax)
-        cbar.set_label("Uncertainty")
+        collection = self.proj_ax.scatter(
+                embedding[:, 0], embedding[:, 1], c=self.uncertainty, picker=True)
+        self.proj_cbar.update_normal(collection)
 
     def plot_data(self, change=None):
         self.data_ax.clear()
